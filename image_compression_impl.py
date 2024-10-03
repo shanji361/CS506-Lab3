@@ -3,11 +3,29 @@ from PIL import Image
 
 # Function to load and preprocess the image
 def load_image(image_path):
-    raise NotImplementedError('You need to implement this function')
+    # Open the image file
+    img = Image.open(image_path)
+    
+    # Convert the image to an RGB image (handle grayscale images)
+    img = img.convert('RGB')
+    
+    # Convert the image to a NumPy array and return it
+    return np.array(img)
 
 # Function to perform SVD on a single channel of the image matrix
 def compress_channel_svd(channel_matrix, rank):
-    raise NotImplementedError('You need to implement this function')
+    # Compute SVD
+    U, S, Vt = np.linalg.svd(channel_matrix, full_matrices=False)
+    
+    # Retain only the first 'rank' singular values/vectors
+    S = np.diag(S[:rank])
+    U = U[:, :rank]
+    Vt = Vt[:rank, :]
+    
+    # Reconstruct the compressed channel using the retained singular values/vectors
+    compressed_channel = np.dot(U, np.dot(S, Vt))
+    
+    return compressed_channel
 
 # Function to perform SVD for image compression
 def image_compression_svd(image_np, rank):
@@ -32,7 +50,7 @@ def image_compression_svd(image_np, rank):
     
     return compressed_img.astype(np.uint8)
 
-# Function to concatenate and save the original and quantized images side by side
+# Function to concatenate and save the original and quantized images side by side into output path
 def save_result(original_image_np, quantized_image_np, output_path):
     # Convert NumPy arrays back to PIL images
     original_image = Image.fromarray(original_image_np)
@@ -48,7 +66,7 @@ def save_result(original_image_np, quantized_image_np, output_path):
     combined_image.paste(original_image, (0, 0))
     combined_image.paste(quantized_image, (width, 0))
     
-    # Save the combined image
+    # Save the combined image into output path
     combined_image.save(output_path)
     
 if __name__ == '__main__':
@@ -58,7 +76,7 @@ if __name__ == '__main__':
     image_np = load_image(image_path)
 
     # Perform image quantization using SVD
-    rank = 8  # Rank for SVD, you may change this to experiment
+    rank = 8  # Rank for SVD
     quantized_image_np = image_compression_svd(image_np, rank)
 
     # Save the original and quantized images side by side
